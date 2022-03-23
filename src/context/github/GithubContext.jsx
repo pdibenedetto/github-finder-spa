@@ -14,6 +14,36 @@ export const GithubProvider = ({ children }) => {
 
   const [state, dispatch] = useReducer(githubReducer, initialState)
 
+  // function to dispatch action in reducer to clear state out of user array
+  // const clearUsers = () => {
+  //   dispatch({
+  //     type: 'CLEAR_USERS',
+  //     payload: []
+  //   })
+  // }
+
+  const clearUsers = () => dispatch({type: 'CLEAR_USERS'})
+
+  // Get search results
+  const searchUsers = async (text) => {
+    setLoading()
+
+    const params = new URLSearchParams({
+      q: text
+    })
+
+    const response = await fetch(`${GITHUB_URL}/search/users?${params}`, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+      },
+    })
+    const {items} = await response.json()
+    dispatch({
+      type: 'GET_USERS',
+      payload: items,
+    })
+  }
+
   // Get initial users (testing purposes)
   const fetchUsers = async () => {
     setLoading()
@@ -37,6 +67,8 @@ export const GithubProvider = ({ children }) => {
         users: state.users,
         loading: state.loading,
         fetchUsers,
+        searchUsers,
+        clearUsers,
       }}>
       {children}
     </GithubContext.Provider>
