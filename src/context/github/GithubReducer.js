@@ -20,6 +20,13 @@ const githubReducer = (state, action) => {
         users: action.payload,
         loading: false,
       }
+    case 'GET_REPOS':
+      return {
+        // spread across the current state, i.e. return current state as is
+        ...state,
+        repos: action.payload,
+        loading: false,
+      }
     case 'SET_LOADING':
       return {
         ...state,

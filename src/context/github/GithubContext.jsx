@@ -1,4 +1,5 @@
 import { createContext, useReducer } from 'react'
+import { createRenderer } from 'react-dom/test-utils'
 import githubReducer from './GithubReducer'
 
 const GithubContext = createContext()
@@ -10,6 +11,7 @@ export const GithubProvider = ({ children }) => {
   const initialState = {
     users: [],
     user: {},
+    repos: [],
     loading: false,
   }
   const [state, dispatch] = useReducer(githubReducer, initialState)
@@ -49,36 +51,52 @@ export const GithubProvider = ({ children }) => {
     dispatch({ type: 'GET_USERS', payload: items })
   }
 
-    // Get a single user
-    const getUser = async (login) => {
-      setLoading()
-  
-      const response = await fetch(`${GITHUB_URL}/users/${login}`, {
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-        },
-      })
+  // Get a single user
+  const getUser = async (login) => {
+    setLoading()
 
-      if (response.status === 404) {
-        window.location = '/notfound'
-      } else {
-        const data = await response.json()
-        dispatch({ type: 'GET_USER', payload: data })
-      }
+    const response = await fetch(`${GITHUB_URL}/users/${login}`, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+      },
+    })
+
+    if (response.status === 404) {
+      window.location = '/notfound'
+    } else {
+      const data = await response.json()
+      dispatch({ type: 'GET_USER', payload: data })
     }
+  }
 
-  const setLoading = () => dispatch({ type: 'SET_LOADING' })  
+  // Get user repositories and set state
+  const getUserRepos = async (login) => {
+    setLoading()
+
+    const params = new URLSearchParams({ sort: 'created', per_page: 10})
+
+    const response = await fetch(`${GITHUB_URL}/users/${login}/repos?${params}`, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+      },
+    })
+    const data = await response.json()
+    dispatch({ type: 'GET_REPOS', payload: data })
+  }
+  const setLoading = () => dispatch({ type: 'SET_LOADING' })
 
   return (
     <GithubContext.Provider
       value={{
         users: state.users,
         loading: state.loading,
+        repos: state.repos,
         user: state.user,
         clearUsers,
         fetchUsers,
         searchUsers,
         getUser,
+        getUserRepos,
       }}>
       {children}
     </GithubContext.Provider>
